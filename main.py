@@ -2,12 +2,9 @@ import requests
 import random
 import time
 from datetime import datetime
-from telegram import Bot
 
 TOKEN = "8007319499:AAFGBS61UcM3t4Jb60a5X_wJgMCKYpMZfSQ"
 CHAT_ID = "-3714429080"
-
-bot = Bot(token=TOKEN)
 
 inicio_msgs = [
     "☀️ Bom dia! Vamos começar mais um dia de ofertas e achados.",
@@ -22,10 +19,18 @@ fim_msgs = [
 ]
 
 def enviar(msg):
-    bot.send_message(chat_id=CHAT_ID, text=msg)
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": msg
+    }
+
+    requests.post(url, data=payload)
 
 def buscar_oferta():
     url = "https://api.mercadolibre.com/sites/MLB/search?q=smartphone"
+
     r = requests.get(url).json()
 
     item = random.choice(r["results"])
@@ -48,18 +53,24 @@ while True:
     hora = agora.hour
     minuto = agora.minute
 
+    # mensagem 08:00
     if hora == 8 and minuto == 0 and not inicio_enviado:
         enviar(random.choice(inicio_msgs))
         inicio_enviado = True
 
+    # ofertas entre 08h e 20h
     if hora >= 8 and hora < 20:
         enviar(buscar_oferta())
+
+        # espera entre 30 e 90 minutos
         time.sleep(random.randint(1800, 5400))
 
+    # mensagem 20:00
     if hora == 20 and minuto == 0 and not fim_enviado:
         enviar(random.choice(fim_msgs))
         fim_enviado = True
 
+    # reset diário
     if hora == 0:
         inicio_enviado = False
         fim_enviado = False
